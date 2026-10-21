@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.15)
+project(ContactApp LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+add_executable(contact_app main.cpp Contact.cpp Contact.h)
