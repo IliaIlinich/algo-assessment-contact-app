@@ -4,13 +4,15 @@
 #include <iostream>
 #include "contact.h"
 
+//TODO generate hash function
+
 int main() {
     std::cin.tie(nullptr);
     std::ios_base::sync_with_stdio(false);
 
-    contact testContact;
-    testContact.setFirstName("Eli");
-    std::cout << testContact.getFirstName() << std::endl;
+    //Contact testContact;
+    //testContact.setFirstName("Eli");
+    //std::cout << testContact.getFirstName() << std::endl;
 
     return 0;
 }

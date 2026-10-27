@@ -2,7 +2,7 @@
 
 #include <string>
 
-struct contact {
+struct Contact {
     std::string firstName = "";
     std::string surname = "";
     std::string email = "";

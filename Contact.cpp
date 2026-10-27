@@ -3,14 +3,14 @@
 #include <iostream>
 #include <stdexcept>
 
-std::string contact::getFirstName() const {
+std::string Contact::getFirstName() const {
     if (firstName.empty()) {
         return "Name field is empty";
     }
     return firstName;
 }
 
-void contact::setFirstName(const std::string& newFirstName) {
+void Contact::setFirstName(const std::string& newFirstName) {
     try {
         if (newFirstName.empty()) {
             throw std::invalid_argument("First name cannot be empty");
@@ -22,14 +22,14 @@ void contact::setFirstName(const std::string& newFirstName) {
     }
 }
 
-std::string contact::getSurname() const {
+std::string Contact::getSurname() const {
     if (surname.empty()) {
         return "Surname field is empty";
     }
     return surname;
 }
 
-void contact::setSurname(const std::string& newSurname) {
+void Contact::setSurname(const std::string& newSurname) {
     try {
         if (newSurname.empty()) {
             throw std::invalid_argument("Surname cannot be empty");
@@ -41,14 +41,14 @@ void contact::setSurname(const std::string& newSurname) {
     }
 }
 
-std::string contact::getEmail() const {
+std::string Contact::getEmail() const {
     if (email.empty()) {
         return "Email is empty";
     }
     return email;
 }
 
-void contact::setEmail(const std::string& newEmail) {
+void Contact::setEmail(const std::string& newEmail) {
     try {
         if (newEmail.empty()) {
             throw std::invalid_argument("Email cannot be empty");
@@ -60,14 +60,14 @@ void contact::setEmail(const std::string& newEmail) {
     }
 }
 
-std::string contact::getPhone() const {
+std::string Contact::getPhone() const {
     if (phone.empty()) {
         return "Phone field is empty";
     }
     return phone;
 }
 
-void contact::setPhone(const std::string& newPhone) {
+void Contact::setPhone(const std::string& newPhone) {
     try {
         if (newPhone.empty()) {
             throw std::invalid_argument("Phone cannot be empty");
