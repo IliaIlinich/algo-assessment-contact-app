@@ -1,16 +1,80 @@
-#include "Contact.h"
+#include "contact.h"
 
-Contact::Contact(string name, string phone, string email)
-    : name_(name), phone_(phone), email_(email) {}
+#include <iostream>
+#include <stdexcept>
 
-void Contact::setName(string name) {
-    name_ = name;
+std::string contact::getFirstName() const {
+    if (firstName.empty()) {
+        return "Name field is empty";
+    }
+    return firstName;
 }
 
-void Contact::setPhone(string phone) {
-    phone_ = phone;
+void contact::setFirstName(const std::string& newFirstName) {
+    try {
+        if (newFirstName.empty()) {
+            throw std::invalid_argument("First name cannot be empty");
+        }
+        firstName = newFirstName;
+        std::cout << "First name successfully changed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
 }
 
-void Contact::setEmail(string email) {
-    email_ = email;
+std::string contact::getSurname() const {
+    if (surname.empty()) {
+        return "Surname field is empty";
+    }
+    return surname;
+}
+
+void contact::setSurname(const std::string& newSurname) {
+    try {
+        if (newSurname.empty()) {
+            throw std::invalid_argument("Surname cannot be empty");
+        }
+        surname = newSurname;
+        std::cout << "Surname successfully changed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
+}
+
+std::string contact::getEmail() const {
+    if (email.empty()) {
+        return "Email is empty";
+    }
+    return email;
+}
+
+void contact::setEmail(const std::string& newEmail) {
+    try {
+        if (newEmail.empty()) {
+            throw std::invalid_argument("Email cannot be empty");
+        }
+        email = newEmail;
+        std::cout << "Email successfully changed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
+}
+
+std::string contact::getPhone() const {
+    if (phone.empty()) {
+        return "Phone field is empty";
+    }
+    return phone;
+}
+
+void contact::setPhone(const std::string& newPhone) {
+    try {
+        if (newPhone.empty()) {
+            throw std::invalid_argument("Phone cannot be empty");
+        }
+        phone = newPhone;
+        std::cout << "Phone successfully changed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
 }

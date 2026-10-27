@@ -1,25 +1,19 @@
 #pragma once
+
 #include <string>
-using namespace std;
 
-class Contact {
-public:
-    Contact(string name, string phone, string email);
+struct contact {
+    std::string firstName = "";
+    std::string surname = "";
+    std::string email = "";
+    std::string phone = "";
 
-    const string& name() const {
-        return name_;
-    }
-    const string& phone() const {
-        return phone_;
-    }
-    const string& email() const {
-        return email_;
-    }
-    void setName(string name);
-    void setPhone(string phone);
-    void setEmail(string email);
-private:
-    string name_;
-    string phone_;
-    string email_;
+    std::string getFirstName() const;
+    void setFirstName(const std::string& newFirstName);
+    std::string getSurname() const;
+    void setSurname(const std::string& newSurname);
+    std::string getEmail() const;
+    void setEmail(const std::string& newEmail);
+    std::string getPhone() const;
+    void setPhone(const std::string& newPhone);
 };

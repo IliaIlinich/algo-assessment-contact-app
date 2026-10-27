@@ -1,23 +1,16 @@
 // Created by Ilia 21/10/2026
 // Algorithms And Data Structures-26AUTHW assessment
 
-#include "Contact.h"
 #include <iostream>
-using namespace std;
+#include "contact.h"
 
 int main() {
-    string name, phone, email;
-    cout << "Enter name, phone and email: ";
-    cin >> name >> phone >> email;
+    std::cin.tie(nullptr);
+    std::ios_base::sync_with_stdio(false);
 
-    Contact c1(name, phone, email);
-
-    cout << "Name:  " << c1.name() << endl;
-    cout << "Phone: " << c1.phone() << endl;
-    cout << "Email: " << c1.email() << endl;
-
-    c1.setEmail("1234@1234.com");
-    cout << c1.email() << endl;
+    contact testContact;
+    testContact.setFirstName("Eli");
+    std::cout << testContact.getFirstName() << std::endl;
 
     return 0;
 }
