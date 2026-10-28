@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "contact.h"
+#include "Contact.h"
 
 #define ll long long
 #define ull unsigned long long
@@ -17,6 +17,7 @@ constexpr size_t TABLE_SIZE = 1ULL << 20;
 
 std::vector<std::vector<Contact>> table(TABLE_SIZE);
 
+// Generating hash using FNV-1a
 ull generateHash(const Contact& contactIn) {
     const std::string& phone = contactIn.phone;
     ull hash = FNVoffset;
@@ -57,15 +58,17 @@ size_t loadContactsFromFile(const std::string& path) {
     return count;
 }
 
+// TODO: make it so new contacts are being put into the .csv file and the one removed are removed from .csv file as well
+
 int main(int argc, char* argv[]) {
+    // cout optimisation
     std::cin.tie(nullptr);
     std::ios_base::sync_with_stdio(false);
-
-    // Default path assumes the program is run from the build/ directory
+    // loading data from contacts.csv
     std::string contactsPath = argc > 1 ? argv[1] : "../contacts.csv";
     size_t loaded = loadContactsFromFile(contactsPath);
     std::cout << "Loaded " << loaded << " contacts from " << contactsPath << '\n';
-
+    // adding a test contact for testing
     for (int i = 0; i < 10; ++i) {
         std::string flag;
         std::cin >> flag;
@@ -75,11 +78,11 @@ int main(int argc, char* argv[]) {
         testContact.setSurname("Smith");
         testContact.setEmail("eli@example.com");
         testContact.setPhone("+44 7700 900123");
-
+        // hash generation for test contact and adding it to database
         ull hash = generateHash(testContact);
         size_t bucket = hash % (TABLE_SIZE - 1);
         table[bucket].push_back(testContact);
-
+        // finding the added test contact in the database
         std::cout << "Hash: " << hash << " Bucket: " << bucket << '\n';
         for (const Contact& c : table[bucket]) {
             std::cout << c.getFirstName() << " " << c.getSurname() << " "

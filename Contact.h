@@ -1,3 +1,5 @@
+// Contact class its variables and methods for inclusion
+
 #pragma once
 
 #include <string>

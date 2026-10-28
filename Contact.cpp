@@ -1,4 +1,6 @@
-#include "contact.h"
+// each contact class methods
+
+#include "Contact.h"
 
 #include <iostream>
 #include <stdexcept>
