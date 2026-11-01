@@ -30,7 +30,7 @@ ull generateHash(const Contact& contactIn) {
     return hash;
 }
 
-// Reads contacts from a CSV file (firstName,surname,email,phone) into the table.
+// Reads contacts from a CSV file (firstName,surname,email,phone,address) into the table.
 // Fields are assigned directly because the setters print a message per call.
 size_t loadContactsFromFile(const std::string& path) {
     std::ifstream file(path);
@@ -49,7 +49,8 @@ size_t loadContactsFromFile(const std::string& path) {
         std::getline(ss, contact.firstName, ',');
         std::getline(ss, contact.surname, ',');
         std::getline(ss, contact.email, ',');
-        std::getline(ss, contact.phone);
+        std::getline(ss, contact.phone, ',');
+        std::getline(ss, contact.address); // last field, may contain commas
 
         size_t bucket = generateHash(contact) % (TABLE_SIZE - 1);
         table[bucket].push_back(contact);
@@ -69,26 +70,24 @@ int main(int argc, char* argv[]) {
     size_t loaded = loadContactsFromFile(contactsPath);
     std::cout << "Loaded " << loaded << " contacts from " << contactsPath << '\n';
     // adding a test contact for testing
-    for (int i = 0; i < 10; ++i) {
-        std::string flag;
-        std::cin >> flag;
-        std::cout << "next" << std::endl;
-        Contact testContact;
-        testContact.setFirstName("Eli");
-        testContact.setSurname("Smith");
-        testContact.setEmail("eli@example.com");
-        testContact.setPhone("+44 7700 900123");
-        // hash generation for test contact and adding it to database
-        ull hash = generateHash(testContact);
-        size_t bucket = hash % (TABLE_SIZE - 1);
-        table[bucket].push_back(testContact);
-        // finding the added test contact in the database
-        std::cout << "Hash: " << hash << " Bucket: " << bucket << '\n';
-        for (const Contact& c : table[bucket]) {
-            std::cout << c.getFirstName() << " " << c.getSurname() << " "
-                    << c.getEmail() << " " << c.getPhone() << '\n';
-        }
+    Contact testContact;
+    testContact.setFirstName("Eli");
+    testContact.setSurname("Smith");
+    testContact.setEmail("eli@example.com");
+    testContact.setPhone("+44 7700 900123");
+    testContact.setAddress("Test city, Test street, AA11 1AA");
+    // hash generation for test contact and adding it to database
+    ull hash = generateHash(testContact);
+    size_t bucket = hash % (TABLE_SIZE - 1);
+    table[bucket].push_back(testContact);
+    // finding the added test contact in the database
+    std::cout << "Hash: " << hash << " Bucket: " << bucket << '\n';
+    for (const Contact& c : table[bucket]) {
+        std::cout << c.getFirstName() << " " << c.getSurname() << " "
+                << c.getEmail() << " " << c.getPhone() << '\n';
     }
     
     return 0;
 }
+
+// TODO add encryption library to encrypt the user data in the file, keep FNV-1a for quick data access.

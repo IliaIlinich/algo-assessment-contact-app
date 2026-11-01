@@ -9,6 +9,7 @@ struct Contact {
     std::string surname = "";
     std::string email = "";
     std::string phone = "";
+    std::string address = "";
 
     std::string getFirstName() const;
     void setFirstName(const std::string& newFirstName);
@@ -18,4 +19,6 @@ struct Contact {
     void setEmail(const std::string& newEmail);
     std::string getPhone() const;
     void setPhone(const std::string& newPhone);
+    std::string getAddress() const;
+    void setAddress(const std::string& newAddress);
 };

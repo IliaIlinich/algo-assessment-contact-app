@@ -80,3 +80,22 @@ void Contact::setPhone(const std::string& newPhone) {
         std::cout << "Error: " << e.what() << std::endl;
     }
 }
+
+std::string Contact::getAddress() const {
+    if (address.empty()) {
+        return "Address field is empty";
+    }
+    return address;
+}
+
+void Contact::setAddress(const std::string& newAddress) {
+    try {
+        if (newAddress.empty()) {
+            throw std::invalid_argument("Address cannot be empty");
+        }
+        address = newAddress;
+        std::cout << "Address successfully changed" << std::endl;
+    } catch (const std::invalid_argument& e) {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
+}
