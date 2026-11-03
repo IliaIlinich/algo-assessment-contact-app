@@ -1,1 +1,35 @@
+# --- Build output (CMake) ---
 build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Makefile
+
+# --- Compiled binaries / objects ---
+contact_app
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.exe
+*.out
+
+# --- Secrets: encryption keys (never commit these) ---
+*.key
+
+# --- Editor / tooling ---
+.cache/
+.vscode/
+.idea/
+*.swp
+*~
+
+# --- LibreOffice lock files (created while the essay is open) ---
+.~lock.*#
+
+# --- OS ---
+.DS_Store
+Thumbs.db
