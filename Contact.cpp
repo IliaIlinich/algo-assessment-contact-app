@@ -1,12 +1,10 @@
 // each contact class methods
 
-#include "Contact.h"
-#include <iostream>
-#include <stdexcept>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include "Contact.h"

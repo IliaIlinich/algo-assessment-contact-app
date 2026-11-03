@@ -3,11 +3,7 @@
 #pragma once
 
 #include <string>
-#include <fstream>
-#include <iostream>
-#include <sstream>
 #include <vector>
-#include "Contact.h"
 #include "Encryption.h"
 
 struct Contact {
