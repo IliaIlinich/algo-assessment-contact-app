@@ -1,141 +1,24 @@
 // Created by Ilia 21/10/2026
 // Algorithms And Data Structures-26AUTHW assessment
 
-#include <cstdio>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 #include "Contact.h"
 #include "Encryption.h"
-
-#define ll long long
-#define ull unsigned long long
-#define FNVoffset 14695981039346656037ULL
-#define FNVprime 1099511628211ULL
+#include "database.h"
 
 using namespace std;
 
+// the hash table with all encrypted rows, declared in Contact.h
 vector<vector<string>> table(TABLE_SIZE);
-
-// Generating hash using FNV-1a from the encrypted phone
-ull generateHash(const string& encPhone) {
-    ull hash = FNVoffset;
-    for (char c : encPhone) {
-        hash ^= static_cast<unsigned char>(c);
-        hash *= FNVprime;
-    }
-    return hash;
-}
-
-// strips '+', ' ' and '-' so the same phone always encrypts to the same encPhone
-string normalisePhone(const string& phone) {
-    string out;
-    for (char c : phone) {
-        if (c != '+' && c != ' ' && c != '-') out += c;
-    }
-    return out;
-}
-
-bool loadOrCreateKey(const string& keyPath, uc key[KEY_BYTES]) {
-    ifstream in(keyPath, ios::binary);
-    if (in) {
-        in.read(reinterpret_cast<char*>(key), KEY_BYTES);
-        if (in.gcount() != static_cast<streamsize>(KEY_BYTES)) {
-            cout << "Error: key file " << keyPath << " is corrupted" << '\n';
-            return false;
-        }
-        return true;
-    }
-    crypto_aead_xchacha20poly1305_ietf_keygen(key);
-    ofstream out(keyPath, ios::binary);
-    if (!out) {
-        cout << "Error: could not create key file " << keyPath << '\n';
-        return false;
-    }
-    out.write(reinterpret_cast<const char*>(key), KEY_BYTES);
-    cout << "New key generated and saved to " << keyPath << '\n';
-    return true;
-}
-
-bool looksLikePlainRow(const string& line) {
-    size_t commas = 0;
-    for (char c : line) {
-        if (c == ',') commas++;
-    }
-    return commas >= 4;
-}
-
-// encrypted rows are encPhone,nonce,encRest (base64 has no commas)
-bool looksLikeEncryptedRow(const string& line) {
-    size_t commas = 0;
-    for (char c : line) {
-        if (c == ',') commas++;
-    }
-    return commas == 2;
-}
-
-size_t encryptPlainRows(const string& path, const uc key[KEY_BYTES]) {
-    ifstream in(path);
-    if (!in) {
-        cout << "Error: could not open " << path << '\n';
-        return 0;
-    }
-    string tmpPath = path + ".tmp";
-    ofstream out(tmpPath);
-    if (!out) {
-        cout << "Error: could not create " << tmpPath << '\n';
-        return 0;
-    }
-    string line;
-    getline(in, line);
-    out << line << '\n';
-    size_t encrypted = 0, broken = 0;
-    while (getline(in, line)) {
-        if (line.empty()) continue;
-        if (looksLikePlainRow(line)) {
-            out << encryptContact(contactFromLine(line), key) << '\n';
-            encrypted++;
-        } else if (looksLikeEncryptedRow(line)) {
-            out << line << '\n';
-        } else {
-            out << line << '\n';
-            broken++;
-        }
-    }
-    in.close();
-    out.close();
-    if (broken > 0) cout << "Warning: " << broken << " rows are not valid encrypted or plain rows" << '\n';
-    if (encrypted == 0) {
-        remove(tmpPath.c_str());
-        return 0;
-    }
-    if (rename(tmpPath.c_str(), path.c_str()) != 0) {
-        cout << "Error: could not replace " << path << '\n';
-        return 0;
-    }
-    return encrypted;
-}
-
-void printBucket(const string& phone, const uc key[KEY_BYTES]) {
-    ull hash = generateHash(encryptPhone(normalisePhone(phone), key));
-    size_t bucket = hash % (TABLE_SIZE - 1);
-    cout << "Hash: " << hash << " Bucket: " << bucket << " (" << table[bucket].size() << " contacts)" << '\n';
-    // only the matching row gets decrypted
-    Contact c;
-    if (findContact(phone, key, c)) {
-        cout << c.getFirstName() << " " << c.getSurname() << " "
-                << c.getEmail() << " " << c.getPhone() << " " << c.getAddress() << '\n';
-    } else {
-        cout << "No contact with phone " << phone << '\n';
-    }
-}
 
 int main(int argc, char* argv[]) {
     // cout optimisation
     cin.tie(nullptr);
     ios_base::sync_with_stdio(false);
-    // initialize sodium
+    // initialise sodium
     if (sodium_init() < 0) {
         cout << "Error: libsodium failed to initialise" << '\n';
         return 1;
@@ -162,6 +45,7 @@ int main(int argc, char* argv[]) {
     size_t loaded = loadEncryptedContactsFromFile(contactsPath);
     cout << "Loaded " << loaded << " contacts from " << contactsPath << '\n';
     
+    // test interface for adding, finding and removing a contact
     Contact newContact;
     cout << "--- Add a contact ---" << '\n';
     cout << "First name: " << '\n';
@@ -191,6 +75,7 @@ int main(int argc, char* argv[]) {
     getline(cin, phoneToRemove);
     if (removeContact(phoneToRemove, contactsPath, key)) {
         cout << "Contact removed" << '\n';
+        // searching again to show that the contact is gone
         printBucket(phoneToRemove, key);
     }
 

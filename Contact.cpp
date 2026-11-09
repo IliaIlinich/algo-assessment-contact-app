@@ -1,4 +1,4 @@
-// each contact class methods
+// this file is made for contact struct methods and other functions related to work with contacts
 
 #include <cstdio>
 #include <fstream>
@@ -9,9 +9,11 @@
 #include <vector>
 #include "Contact.h"
 #include "Encryption.h"
+#include "database.h"
 
 using namespace std;
 
+// getters return a message if the field is empty, setters don't accept empty values
 string Contact::getFirstName() const {
     if (firstName.empty()) {
         return "Name field is empty";
@@ -107,6 +109,7 @@ void Contact::setAddress(const string& newAddress) {
     }
 }
 
+// checks for empty fields and duplicates, then saves the encrypted contact to the file and the table
 bool addContact(const Contact& contact, const string& path, const uc key[KEY_BYTES]) {
     if (contact.firstName.empty() || contact.surname.empty() || contact.email.empty() || contact.phone.empty() || contact.address.empty()) {
         cout << "Error: contact has empty fields, not added" << '\n';
@@ -115,6 +118,7 @@ bool addContact(const Contact& contact, const string& path, const uc key[KEY_BYT
     string row = encryptContact(contact, key);
     string encPhone = getEncPhone(row);
     size_t bucket = generateHash(encPhone) % (TABLE_SIZE - 1);
+    // checking that the phone isn't in the table already
     for (const string& r : table[bucket]) {
         if (getEncPhone(r) == encPhone) {
             cout << "Error: contact with phone " << contact.phone << " already exists" << '\n';
@@ -131,19 +135,19 @@ bool addContact(const Contact& contact, const string& path, const uc key[KEY_BYT
     return true;
 }
 
+// removes the contact from the file first and then from the table, so they still match if the file can't be changed
 bool removeContact(const string& phoneIn, const string& path, const uc key[KEY_BYTES]) {
     string encPhone = encryptPhone(normalisePhone(phoneIn), key);
     size_t bucket = generateHash(encPhone) % (TABLE_SIZE - 1);
     vector<string>& rows = table[bucket];
-    bool foundInTable = false;
+    size_t rowIndex = rows.size();
     for (size_t i = 0; i < rows.size(); i++) {
         if (getEncPhone(rows[i]) == encPhone) {
-            rows.erase(rows.begin() + i);
-            foundInTable = true;
+            rowIndex = i;
             break;
         }
     }
-    if (!foundInTable) {
+    if (rowIndex == rows.size()) {
         cout << "Error: no contact with phone " << phoneIn << '\n';
         return false;
     }
@@ -152,6 +156,7 @@ bool removeContact(const string& phoneIn, const string& path, const uc key[KEY_B
         cout << "Error: could not open " << path << '\n';
         return false;
     }
+    // writing all rows except the removed one to a tmp file, which then replaces the original
     string tmpPath = path + ".tmp";
     ofstream out(tmpPath);
     if (!out) {
@@ -159,7 +164,7 @@ bool removeContact(const string& phoneIn, const string& path, const uc key[KEY_B
         return false;
     }
     string line;
-    getline(in, line);
+    getline(in, line); // copy header as it is
     out << line << '\n';
     bool removedFromFile = false;
     while (getline(in, line)) {
@@ -175,6 +180,7 @@ bool removeContact(const string& phoneIn, const string& path, const uc key[KEY_B
     out.close();
     if (!removedFromFile) {
         remove(tmpPath.c_str());
+        rows.erase(rows.begin() + rowIndex);
         cout << "Warning: contact was in memory but not in " << path << '\n';
         return true;
     }
@@ -182,6 +188,7 @@ bool removeContact(const string& phoneIn, const string& path, const uc key[KEY_B
         cout << "Error: could not replace " << path << '\n';
         return false;
     }
+    rows.erase(rows.begin() + rowIndex);
     return true;
 }
 
@@ -197,6 +204,7 @@ bool findContact(const string& phoneIn, const uc key[KEY_BYTES], Contact& contac
     return false;
 }
 
+// turns a plain csv line into a contact
 Contact contactFromLine(const string& line) {
     stringstream ss(line);
     Contact contact;
@@ -208,17 +216,13 @@ Contact contactFromLine(const string& line) {
     return contact;
 }
 
-string contactToLine(const Contact& contact) {
-    return contact.firstName + "," + contact.surname + "," + contact.email + ","
-            + contact.phone + "," + contact.address;
-}
-
 // row format: encPhone,nonce,encRest where rest is firstName,surname,email,address
 string encryptContact(const Contact& contact, const uc key[KEY_BYTES]) {
     string rest = contact.firstName + "," + contact.surname + "," + contact.email + "," + contact.address;
     return encryptPhone(normalisePhone(contact.phone), key) + "," + encryptRow(rest, key);
 }
 
+// reverse of encryptContact, phone and the rest are encrypted separately so they get decrypted separately
 bool decryptContact(const string& row, const uc key[KEY_BYTES], Contact& contactOut) {
     size_t comma = row.find(',');
     if (comma == string::npos) return false;
@@ -233,31 +237,9 @@ bool decryptContact(const string& row, const uc key[KEY_BYTES], Contact& contact
     return true;
 }
 
+// encrypted phone is the first field of the row, so it can be read without decrypting anything
 string getEncPhone(const string& row) {
     return row.substr(0, row.find(','));
-}
-
-size_t encryptContactsFile(const string& plainPath, const string& encPath, const uc key[KEY_BYTES]) {
-    ifstream in(plainPath);
-    if (!in) {
-        cout << "Error: could not open " << plainPath << '\n';
-        return 0;
-    }
-    ofstream out(encPath);
-    if (!out) {
-        cout << "Error: could not create " << encPath << '\n';
-        return 0;
-    }
-    string line;
-    getline(in, line); // copy header as it is
-    out << line << '\n';
-    size_t count = 0;
-    while (getline(in, line)) {
-        if (line.empty()) continue;
-        out << encryptContact(contactFromLine(line), key) << '\n';
-        count++;
-    }
-    return count;
 }
 
 // rows stay encrypted in memory, only the encrypted phone is used for the hash
