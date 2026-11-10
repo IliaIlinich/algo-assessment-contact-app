@@ -33,3 +33,6 @@ contact_app
 # --- OS ---
 .DS_Store
 Thumbs.db
+
+# --- Large files ---
+contacts_test.csv
