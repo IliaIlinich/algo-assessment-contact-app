@@ -1,6 +1,7 @@
 // this file is made for contact struct methods and other functions related to work with contacts
 
 #include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -112,7 +113,7 @@ void Contact::setAddress(const string& newAddress) {
 // checks for empty fields and duplicates, then saves the encrypted contact to the file and the table
 bool addContact(const Contact& contact, const string& path, const uc key[KEY_BYTES]) {
     if (contact.firstName.empty() || contact.surname.empty() || contact.email.empty() || contact.phone.empty() || contact.address.empty()) {
-        cout << "Error: contact has empty fields, not added" << '\n';
+        cout << "Error: contact has empty fields, not added" << endl;
         return false;
     }
     string row = encryptContact(contact, key);
@@ -121,16 +122,16 @@ bool addContact(const Contact& contact, const string& path, const uc key[KEY_BYT
     // checking that the phone isn't in the table already
     for (const string& r : table[bucket]) {
         if (getEncPhone(r) == encPhone) {
-            cout << "Error: contact with phone " << contact.phone << " already exists" << '\n';
+            cout << "Error: contact with phone " << contact.phone << " already exists" << endl;
             return false;
         }
     }
     ofstream out(path, ios::app);
     if (!out) {
-        cout << "Error: could not open " << path << '\n';
+        cout << "Error: could not open " << path << endl;
         return false;
     }
-    out << row << '\n';
+    out << row << endl;
     table[bucket].push_back(row);
     return true;
 }
@@ -148,24 +149,24 @@ bool removeContact(const string& phoneIn, const string& path, const uc key[KEY_B
         }
     }
     if (rowIndex == rows.size()) {
-        cout << "Error: no contact with phone " << phoneIn << '\n';
+        cout << "Error: no contact with phone " << phoneIn << endl;
         return false;
     }
     ifstream in(path);
     if (!in) {
-        cout << "Error: could not open " << path << '\n';
+        cout << "Error: could not open " << path << endl;
         return false;
     }
     // writing all rows except the removed one to a tmp file, which then replaces the original
     string tmpPath = path + ".tmp";
     ofstream out(tmpPath);
     if (!out) {
-        cout << "Error: could not create " << tmpPath << '\n';
+        cout << "Error: could not create " << tmpPath << endl;
         return false;
     }
     string line;
     getline(in, line); // copy header as it is
-    out << line << '\n';
+    out << line << endl;
     bool removedFromFile = false;
     while (getline(in, line)) {
         if (line.empty()) continue;
@@ -174,18 +175,21 @@ bool removeContact(const string& phoneIn, const string& path, const uc key[KEY_B
             removedFromFile = true;
             continue;
         }
-        out << line << '\n';
+        out << line << endl;
     }
     in.close();
     out.close();
     if (!removedFromFile) {
         remove(tmpPath.c_str());
         rows.erase(rows.begin() + rowIndex);
-        cout << "Warning: contact was in memory but not in " << path << '\n';
+        cout << "Warning: contact was in memory but not in " << path << endl;
         return true;
     }
-    if (rename(tmpPath.c_str(), path.c_str()) != 0) {
-        cout << "Error: could not replace " << path << '\n';
+    // std::filesystem::rename replaces the old file on every OS (C rename fails on Windows if it exists)
+    error_code renameError;
+    filesystem::rename(tmpPath, path, renameError);
+    if (renameError) {
+        cout << "Error: could not replace " << path << endl;
         return false;
     }
     rows.erase(rows.begin() + rowIndex);
@@ -246,7 +250,7 @@ string getEncPhone(const string& row) {
 size_t loadEncryptedContactsFromFile(const string& encPath) {
     ifstream file(encPath);
     if (!file) {
-        cout << "Error: could not open " << encPath << '\n';
+        cout << "Error: could not open " << encPath << endl;
         return 0;
     }
     string line;

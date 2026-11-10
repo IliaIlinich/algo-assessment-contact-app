@@ -31,13 +31,13 @@ string normalisePhone(const string& phone) {
 void printBucket(const string& phone, const uc key[KEY_BYTES]) {
     ull hash = generateHash(encryptPhone(normalisePhone(phone), key));
     size_t bucket = hash % (TABLE_SIZE - 1);
-    cout << "Hash: " << hash << " Bucket: " << bucket << " (" << table[bucket].size() << " contacts)" << '\n';
+    cout << "Hash: " << hash << " Bucket: " << bucket << " (" << table[bucket].size() << " contacts)" << endl;
     // only the matching row gets decrypted
     Contact c;
     if (findContact(phone, key, c)) {
         cout << c.getFirstName() << " " << c.getSurname() << " "
-                << c.getEmail() << " " << c.getPhone() << " " << c.getAddress() << '\n';
+                << c.getEmail() << " " << c.getPhone() << " " << c.getAddress() << endl;
     } else {
-        cout << "No contact with phone " << phone << '\n';
+        cout << "No contact with phone " << phone << endl;
     }
 }

@@ -1,13 +1,13 @@
 // Created by Ilia 21/10/2026
 // Algorithms And Data Structures-26AUTHW assessment
 
-#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 #include "Contact.h"
 #include "Encryption.h"
-#include "database.h"
+#include "commands.h"
+#include "tui.h"
 
 using namespace std;
 
@@ -15,71 +15,41 @@ using namespace std;
 vector<vector<string>> table(TABLE_SIZE);
 
 int main(int argc, char* argv[]) {
-    // cout optimisation
-    cin.tie(nullptr);
-    ios_base::sync_with_stdio(false);
     // initialise sodium
     if (sodium_init() < 0) {
-        cout << "Error: libsodium failed to initialise" << '\n';
+        cerr << "Error: libsodium failed to initialise" << endl;
         return 1;
     }
-    // loading the key (created on first run)
+    App app;
     // contacts.csv holds the encrypted rows, contacts_test.csv is plain test data to copy rows from
-    string contactsPath = argc > 1 ? argv[1] : "../contacts.csv";
-    string keyPath = contactsPath + ".key";
-    uc key[KEY_BYTES];
-    if (!loadOrCreateKey(keyPath, key)) return 1;
-    // creating an empty contacts file (header only) if it doesn't exist yet
-    if (!ifstream(contactsPath)) {
-        ofstream(contactsPath) << "firstName,surname,email,phone,address" << '\n';
-        cout << "Created empty " << contactsPath << '\n';
+    app.contactsPath = argc > 1 ? argv[1] : "../contacts.csv";
+    if (!app.ui.start()) return 1;
+    app.ui.setCommands(COMMAND_NAMES);
+    app.ui.setInfo("loading...");
+    app.ui.print("Loading contacts from " + app.contactsPath + " ...", LineKind::Info);
+    app.ui.redraw();
+
+    if (!loadData(app)) {
+        // stop() prints the error that was written to the log
+        app.ui.stop();
+        sodium_memzero(app.key, sizeof app.key);
+        return 1;
     }
-    // checking for unencrypted records and encrypting them
-    size_t encrypted = encryptPlainRows(contactsPath, key);
-    if (encrypted > 0) {
-        cout << "Found and encrypted " << encrypted << " unencrypted contacts in " << contactsPath << '\n';
-    } else {
-        cout << "No unencrypted contacts found in " << contactsPath << '\n';
-    }
-    // loading data from the encrypted file
-    size_t loaded = loadEncryptedContactsFromFile(contactsPath);
-    cout << "Loaded " << loaded << " contacts from " << contactsPath << '\n';
-    
-    // test interface for adding, finding and removing a contact
-    Contact newContact;
-    cout << "--- Add a contact ---" << '\n';
-    cout << "First name: " << '\n';
-    getline(cin, newContact.firstName);
-    cout << "Surname: " << '\n';
-    getline(cin, newContact.surname);
-    cout << "Email: " << '\n';
-    getline(cin, newContact.email);
-    cout << "Phone: " << '\n';
-    getline(cin, newContact.phone);
-    cout << "Address: " << '\n';
-    getline(cin, newContact.address);
-    if (addContact(newContact, contactsPath, key)) {
-        cout << "Contact added" << '\n';
-        printBucket(newContact.phone, key);
+    updateInfo(app);
+
+    // main loop: read a command from the bottom line and run it
+    bool running = true;
+    while (running) {
+        string line;
+        InputResult r = app.ui.readLine(":", line, true);
+        if (r == InputResult::Quit) break;
+        if (r == InputResult::Cancelled || trim(line).empty()) continue;
+        app.ui.print(":" + trim(line), LineKind::Command);
+        running = runCommand(app, line);
     }
 
-    cout << "--- Find a contact ---" << '\n';
-    cout << "Phone of the contact to find: " << '\n';
-    string phoneToFind;
-    getline(cin, phoneToFind);
-    printBucket(phoneToFind, key);
-
-    cout << "--- Remove a contact ---" << '\n';
-    cout << "Phone of the contact to remove: " << '\n';
-    string phoneToRemove;
-    getline(cin, phoneToRemove);
-    if (removeContact(phoneToRemove, contactsPath, key)) {
-        cout << "Contact removed" << '\n';
-        // searching again to show that the contact is gone
-        printBucket(phoneToRemove, key);
-    }
-
+    app.ui.stop();
     // removing the key from memory
-    sodium_memzero(key, sizeof key);
+    sodium_memzero(app.key, sizeof app.key);
     return 0;
 }

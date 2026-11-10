@@ -1,6 +1,7 @@
 // this file shows all functions related to encryption in database using libSodium
 
 #include <cstdio>
+#include <filesystem>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -109,7 +110,7 @@ bool loadOrCreateKey(const string& keyPath, uc key[KEY_BYTES]) {
     if (in) {
         in.read(reinterpret_cast<char*>(key), KEY_BYTES);
         if (in.gcount() != static_cast<streamsize>(KEY_BYTES)) {
-            cout << "Error: key file " << keyPath << " is corrupted" << '\n';
+            cout << "Error: key file " << keyPath << " is corrupted" << endl;
             return false;
         }
         return true;
@@ -117,11 +118,11 @@ bool loadOrCreateKey(const string& keyPath, uc key[KEY_BYTES]) {
     crypto_aead_xchacha20poly1305_ietf_keygen(key);
     ofstream out(keyPath, ios::binary);
     if (!out) {
-        cout << "Error: could not create key file " << keyPath << '\n';
+        cout << "Error: could not create key file " << keyPath << endl;
         return false;
     }
     out.write(reinterpret_cast<const char*>(key), KEY_BYTES);
-    cout << "New key generated and saved to " << keyPath << '\n';
+    cout << "New key generated and saved to " << keyPath << endl;
     return true;
 }
 
@@ -147,42 +148,45 @@ bool looksLikeEncryptedRow(const string& line) {
 size_t encryptPlainRows(const string& path, const uc key[KEY_BYTES]) {
     ifstream in(path);
     if (!in) {
-        cout << "Error: could not open " << path << '\n';
+        cout << "Error: could not open " << path << endl;
         return 0;
     }
     // writing to a tmp file, which replaces the original only if something got encrypted
     string tmpPath = path + ".tmp";
     ofstream out(tmpPath);
     if (!out) {
-        cout << "Error: could not create " << tmpPath << '\n';
+        cout << "Error: could not create " << tmpPath << endl;
         return 0;
     }
     string line;
     getline(in, line); // copy header as it is
-    out << line << '\n';
+    out << line << endl;
     size_t encrypted = 0, broken = 0;
     while (getline(in, line)) {
         if (line.empty()) continue;
         if (looksLikePlainRow(line)) {
-            out << encryptContact(contactFromLine(line), key) << '\n';
+            out << encryptContact(contactFromLine(line), key) << endl;
             encrypted++;
         } else if (looksLikeEncryptedRow(line)) {
-            out << line << '\n';
+            out << line << endl;
         } else {
             // broken rows are kept in the file, so no data gets lost
-            out << line << '\n';
+            out << line << endl;
             broken++;
         }
     }
     in.close();
     out.close();
-    if (broken > 0) cout << "Warning: " << broken << " rows are not valid encrypted or plain rows" << '\n';
+    if (broken > 0) cout << "Warning: " << broken << " rows are not valid encrypted or plain rows" << endl;
     if (encrypted == 0) {
         remove(tmpPath.c_str());
         return 0;
     }
-    if (rename(tmpPath.c_str(), path.c_str()) != 0) {
-        cout << "Error: could not replace " << path << '\n';
+    // std::filesystem::rename replaces the old file on every OS (C rename fails on Windows if it exists)
+    error_code renameError;
+    filesystem::rename(tmpPath, path, renameError);
+    if (renameError) {
+        cout << "Error: could not replace " << path << endl;
         return 0;
     }
     return encrypted;
