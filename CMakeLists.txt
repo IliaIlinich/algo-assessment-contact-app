@@ -30,6 +30,10 @@ if(WIN32)
     file(GLOB PDCURSES_SOURCES ${pdcurses_SOURCE_DIR}/pdcurses/*.c ${pdcurses_SOURCE_DIR}/wincon/*.c)
     add_library(pdcurses STATIC ${PDCURSES_SOURCES})
     target_include_directories(pdcurses PUBLIC ${pdcurses_SOURCE_DIR} ${pdcurses_SOURCE_DIR}/wincon)
+    # wide (Unicode) build: line-drawing characters like ACS_HLINE are written as Unicode (U+2500)
+    # instead of code page 437 bytes, which show up as '?' when the console uses UTF-8 or another code page.
+    # PUBLIC so our code sees the same chtype layout as the library
+    target_compile_definitions(pdcurses PUBLIC PDC_WIDE)
     set(CURSES_TARGET pdcurses)
 else()
     # ncurses comes with macOS and Linux (on Debian/Ubuntu: sudo apt install libncurses-dev)
