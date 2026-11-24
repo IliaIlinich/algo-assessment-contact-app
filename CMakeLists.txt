@@ -47,3 +47,11 @@ endif()
 
 add_executable(contact_app main.cpp Contact.cpp Encryption.cpp database.cpp commands.cpp tui.cpp)
 target_link_libraries(contact_app PRIVATE ${SODIUM_TARGET} ${CURSES_TARGET})
+
+# automated tests (no curses needed, they test the data structure and encryption directly)
+# build and run with: cmake --build build && ctest --test-dir build --output-on-failure
+enable_testing()
+add_executable(contact_tests tests/tests.cpp Contact.cpp Encryption.cpp database.cpp)
+target_link_libraries(contact_tests PRIVATE ${SODIUM_TARGET})
+add_test(NAME unit_tests COMMAND contact_tests)
+add_test(NAME million_contacts COMMAND contact_tests --large)
